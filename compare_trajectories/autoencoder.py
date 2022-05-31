@@ -15,7 +15,9 @@ import numpy as np
 
 class ConvAutoencoder:
     def __init__(self, width, height, depth, filters=(32, 64), latentDim=16, lr=1e-3):
-        self.encoder, self.decoder, self.autoencoder = self.build(width, height, depth, filters=(32, 64), latentDim=16)
+        self.encoder, self.decoder, self.autoencoder = self.build(
+            width, height, depth, filters=(32, 64), latentDim=16
+        )
         self.compile(lr=lr)
 
     @staticmethod
@@ -45,8 +47,7 @@ class ConvAutoencoder:
         # reverse order
         for f in filters[::-1]:
             # apply a CONV_TRANSPOSE => RELU => BN operation
-            x = Conv2DTranspose(f, (3, 3), strides=2,
-                                padding="same")(x)
+            x = Conv2DTranspose(f, (3, 3), strides=2, padding="same")(x)
             x = LeakyReLU(alpha=0.2)(x)
             x = BatchNormalization(axis=chanDim)(x)
         x = Conv2DTranspose(depth, (3, 3), padding="same")(x)
@@ -58,4 +59,9 @@ class ConvAutoencoder:
         return (encoder, decoder, autoencoder)
 
     def compile(self, lr):
-        self.autoencoder.compile(loss='mse', optimizer=Adam(lr=lr))
+        self.autoencoder.compile(loss="mse", optimizer=Adam(lr=lr))
+
+    def predict_latent(self,data):
+        data = np.array(data).astype("float32") / 255.0
+        latent_povs = self.encoder.predict(data, verbose=10)
+        return latent_povs

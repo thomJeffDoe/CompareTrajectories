@@ -10,19 +10,31 @@ logging.basicConfig(level=logging.INFO)
 
 
 class DataHandler:
-    def __init__(self, env_name,rebuild_data=False, size=120):
+    def __init__(self, env_name, rebuild_data=False, size=120):
         self.env_name = env_name
         self.size = size
         if rebuild_data:
             self.actions, self.povs, self.rewards = self.load_data()
             self.actions = self.discretize_actions()
-            save_data_numpy(self.actions,os.path.join(path,"data/trajectories"),"actions.npy")
-            save_data_numpy(self.povs,os.path.join(path,"data/trajectories"),"povs.npy")
-            save_data_numpy(self.rewards,os.path.join(path,"data/trajectories"),"rewards.npy")
+            save_data_numpy(
+                self.actions, os.path.join(path, "data/trajectories"), "actions.npy"
+            )
+            save_data_numpy(
+                self.povs, os.path.join(path, "data/trajectories"), "povs.npy"
+            )
+            save_data_numpy(
+                self.rewards, os.path.join(path, "data/trajectories"), "rewards.npy"
+            )
         else:
-            self.actions = load_data_numpy(os.path.join(path,"data/trajectories"),"actions.npy")
-            self.povs = load_data_numpy(os.path.join(path,"data/trajectories"),"povs.npy")
-            self.rewards = load_data_numpy(os.path.join(path,"data/trajectories"),"rewards.npy")
+            self.actions = load_data_numpy(
+                os.path.join(path, "data/trajectories"), "actions.npy"
+            )
+            self.povs = load_data_numpy(
+                os.path.join(path, "data/trajectories"), "povs.npy"
+            )
+            self.rewards = load_data_numpy(
+                os.path.join(path, "data/trajectories"), "rewards.npy"
+            )
 
     def download_data(self):
         """
@@ -44,7 +56,7 @@ class DataHandler:
             data = minerl.data.make(self.env_name, num_workers=1)
             trajectory_names = data.get_trajectory_names()
         except KeyError:
-            raise ValueError('Wrong Environment name')
+            raise ValueError("Wrong Environment name")
         except FileNotFoundError:
             self.download_data()
             data = minerl.data.make(self.env_name, num_workers=1)
@@ -53,14 +65,16 @@ class DataHandler:
         povs = []
         rewards = []
         for index, trajectory_name in enumerate(tqdm(trajectory_names)):
-            trajectory = data.load_data(trajectory_name, skip_interval=10, include_metadata=False)
-            action,pov,reward = self.isolate(trajectory)
+            trajectory = data.load_data(
+                trajectory_name, skip_interval=10, include_metadata=False
+            )
+            action, pov, reward = self.isolate(trajectory)
             actions.append(action)
             povs.append(action)
             rewards.append(action)
             if len(actions) >= self.size:
                 break
-        return actions,povs,rewards
+        return actions, povs, rewards
 
     @staticmethod
     def isolate(raw_trajectory):
@@ -69,9 +83,9 @@ class DataHandler:
         povs = []
         for step in raw_trajectory:
             rewards.append(step[2])
-            povs.append(step[0]['pov'])
-            actions.append(step[1]['vector'])
-        return actions,povs,rewards
+            povs.append(step[0]["pov"])
+            actions.append(step[1]["vector"])
+        return actions, povs, rewards
 
     def discretize_actions(self):
         actions_flatten = [i for j in self.actions for i in j]
@@ -80,13 +94,12 @@ class DataHandler:
         actions_predicted = []
         for idx in range(len(self.actions)):
             actions_predicted.append(
-                predictions[count_actions_per_traj:count_actions_per_traj + len(self.actions[idx])]
+                predictions[
+                    count_actions_per_traj : count_actions_per_traj
+                    + len(self.actions[idx])
+                ]
             )
-            count_actions_per_traj=len(self.actions[idx])
+            count_actions_per_traj = len(self.actions[idx])
         return actions_predicted
 
-data = DataHandler(env_name="MineRLObtainDiamondVectorObf-v0",size=20, rebuild_data=True)
-print(len(data.povs))
-print(len(data.actions))
-print(len(data.rewards))
-print(data.actions)
+
